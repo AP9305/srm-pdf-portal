@@ -41,6 +41,3 @@ Thumbs.db
 
 # Local development
 .env.local
-
-# Temporarily ignore PDF for initial upload
-main pdf/*.pdf
