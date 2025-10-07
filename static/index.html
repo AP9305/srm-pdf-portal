@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SRMIST Syllabus Extractor Portal</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        
+        .gradient-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        
+        .glass-effect {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .animate-float {
+            animation: float 6s ease-in-out infinite;
+        }
+        
+        .animate-pulse-slow {
+            animation: pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+        
+        .animate-fade-in {
+            animation: fadeIn 0.6s ease-out;
+        }
+        
+        .animate-slide-up {
+            animation: slideUp 0.5s ease-out;
+        }
+        
+        .animate-bounce-in {
+            animation: bounceIn 0.8s ease-out;
+        }
+        
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-20px); }
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        @keyframes bounceIn {
+            0% { opacity: 0; transform: scale(0.3); }
+            50% { opacity: 1; transform: scale(1.05); }
+            70% { transform: scale(0.9); }
+            100% { opacity: 1; transform: scale(1); }
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            transition: all 0.3s ease;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 20px 40px rgba(102, 126, 234, 0.4);
+        }
+        
+        .btn-success {
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+        }
+        
+        .btn-success:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 20px 40px rgba(17, 153, 142, 0.4);
+        }
+        
+        .input-focus {
+            transition: all 0.3s ease;
+        }
+        
+        .input-focus:focus {
+            transform: translateY(-2px);
+            box-shadow: 0 20px 40px rgba(102, 126, 234, 0.2);
+        }
+        
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .particle {
+            position: absolute;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            pointer-events: none;
+            animation: particle-float 8s infinite linear;
+        }
+        
+        /* Fix dropdown and layout issues */
+        .dropdown-container {
+            position: relative;
+            z-index: 100;
+        }
+        
+        .main-container {
+            position: relative;
+            z-index: 1;
+        }
+        
+        .suggestions-dropdown {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            margin-top: 0.5rem;
+            background: white;
+            border-radius: 0.75rem;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+            border: 1px solid #e5e7eb;
+            z-index: 1000;
+            max-height: 20rem;
+            overflow-y: auto;
+        }
+        
+        /* Mobile optimizations */
+        @media (max-width: 768px) {
+            .suggestions-dropdown {
+                max-height: 60vh;
+                border-radius: 0.5rem;
+            }
+            
+            .mobile-padding {
+                padding: 1rem !important;
+            }
+            
+            .mobile-text-sm {
+                font-size: 0.875rem !important;
+            }
+            
+            .mobile-spacing {
+                margin-top: 1rem !important;
+            }
+        }
+        
+        /* Touch-friendly buttons */
+        .touch-target {
+            min-height: 44px;
+            min-width: 44px;
+        }
+        
+        /* Ensure the main card can contain the dropdown */
+        .search-card {
+            position: relative;
+            overflow: visible !important;
+            z-index: 10;
+        }
+        
+        /* Fix for dropdown positioning */
+        .input-container {
+            position: relative;
+            z-index: 20;
+        }
+        
+        @keyframes particle-float {
+            0% { transform: translateY(100vh) rotate(0deg); opacity: 0; }
+            10% { opacity: 1; }
+            90% { opacity: 1; }
+            100% { transform: translateY(-100px) rotate(360deg); opacity: 0; }
+        }
+    </style>
+</head>
+<body class="min-h-screen gradient-bg relative">
+    <!-- Animated Background Particles -->
+    <div id="particles"></div>
+    
+    <div id="root"></div>
+    
+    <script type="text/babel">
+        const { useState, useEffect, useRef } = React;
+        
+        // Particle system for background animation
+        function createParticles() {
+            const particlesContainer = document.getElementById('particles');
+            for (let i = 0; i < 20; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'particle';
+                particle.style.left = Math.random() * 100 + '%';
+                particle.style.width = Math.random() * 4 + 2 + 'px';
+                particle.style.height = particle.style.width;
+                particle.style.animationDelay = Math.random() * 8 + 's';
+                particle.style.animationDuration = (Math.random() * 3 + 5) + 's';
+                particlesContainer.appendChild(particle);
+            }
+        }
+        
+        function App() {
+            const [subject, setSubject] = useState('');
+            const [loading, setLoading] = useState(false);
+            const [result, setResult] = useState(null);
+            const [error, setError] = useState('');
+            const [allSubjects, setAllSubjects] = useState([]);
+            const [loadingSubjects, setLoadingSubjects] = useState(true);
+            const [showSuggestions, setShowSuggestions] = useState(false);
+            const inputRef = useRef(null);
+            
+            useEffect(() => {
+                createParticles();
+                loadSubjects();
+            }, []);
+            
+            const loadSubjects = async () => {
+                try {
+                    setLoadingSubjects(true);
+                    const response = await fetch('/api/subjects');
+                    const data = await response.json();
+                    
+                    if (data.success) {
+                        setAllSubjects(data.subjects);
+                        console.log(`Loaded ${data.count} subjects from PDF TOC`);
+                    } else {
+                        console.error('Failed to load subjects:', data.message);
+                        // Fallback to static subjects
+                        setAllSubjects([
+                            {code: 'SAMPLE', name: 'Data Structures', display: 'SAMPLE - Data Structures'},
+                            {code: 'SAMPLE', name: 'Software Testing', display: 'SAMPLE - Software Testing'},
+                            {code: 'SAMPLE', name: 'Machine Learning', display: 'SAMPLE - Machine Learning'}
+                        ]);
+                    }
+                } catch (error) {
+                    console.error('Error loading subjects:', error);
+                    setAllSubjects([]);
+                } finally {
+                    setLoadingSubjects(false);
+                }
+            };
+            
+            const handleSearch = async () => {
+                if (!subject.trim()) {
+                    setError('Please enter a subject name.');
+                    return;
+                }
+                
+                setLoading(true);
+                setError('');
+                setResult(null);
+                
+                try {
+                    const response = await fetch('/api/search', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ subject: subject.trim() }),
+                    });
+                    
+                    const data = await response.json();
+                    
+                    if (data.success) {
+                        setResult(data);
+                    } else {
+                        setError(data.message || 'No matching pages found. Try different keywords or check spelling.');
+                    }
+                } catch (err) {
+                    console.error('Search error:', err);
+                    setError('Network error. Please check your connection and try again.');
+                }
+                
+                setLoading(false);
+            };
+            
+            const handleKeyPress = (e) => {
+                if (e.key === 'Enter') {
+                    handleSearch();
+                }
+            };
+            
+            const handleSuggestionClick = (subjectObj) => {
+                console.log('Suggestion clicked:', subjectObj);
+                setSubject(subjectObj.name);
+                setShowSuggestions(false);
+                setError('');
+                // Small delay to ensure state updates
+                setTimeout(() => {
+                    inputRef.current?.focus();
+                }, 100);
+            };
+            
+            const filteredSuggestions = allSubjects.filter(s => {
+                const searchTerm = subject.toLowerCase();
+                return searchTerm && (
+                    s.name.toLowerCase().includes(searchTerm) ||
+                    s.code.toLowerCase().includes(searchTerm) ||
+                    s.display.toLowerCase().includes(searchTerm)
+                ) && s.name.toLowerCase() !== searchTerm;
+            }).slice(0, 8); // Limit to 8 suggestions
+            
+            return (
+                <div className="min-h-screen flex items-center justify-center p-2 sm:p-4 relative z-10">
+                    <div className="max-w-4xl w-full main-container">
+                        {/* Header Section */}
+                        <div className="text-center mb-8 sm:mb-12 animate-fade-in px-2">
+                            <div className="inline-block p-3 sm:p-4 rounded-full glass-effect mb-4 sm:mb-6 animate-float">
+                                <i className="fas fa-graduation-cap text-3xl sm:text-4xl text-purple-600"></i>
+                            </div>
+                            <h1 className="text-3xl sm:text-5xl md:text-6xl font-bold text-white mb-3 sm:mb-4 font-['Poppins']">
+                                SRMIST Syllabus
+                                <span className="block text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-pink-400">
+                                    Extractor Portal
+                                </span>
+                            </h1>
+                            <p className="text-base sm:text-xl text-white/90 max-w-2xl mx-auto leading-relaxed px-4">
+                                Search any subject from the <span className="font-semibold">School of Computing Syllabus</span>
+                                <br className="hidden sm:block" />
+                                <span className="block sm:inline text-yellow-300 text-sm sm:text-base mt-2 sm:mt-0">Direct Downloads • Instant extraction • Accurate PDFs</span>
+                            </p>
+                        </div>
+                        
+                        {/* Main Search Card */}
+                        <div className="glass-effect rounded-2xl sm:rounded-3xl p-4 sm:p-8 md:p-12 shadow-2xl animate-slide-up search-card mx-2 sm:mx-0">
+                            <div className="relative mb-6 sm:mb-8 input-container">
+                                <div className="relative">
+                                    <input
+                                        ref={inputRef}
+                                        type="text"
+                                        value={subject}
+                                        onChange={(e) => {
+                                            setSubject(e.target.value);
+                                            setShowSuggestions(e.target.value.length > 0);
+                                            setError('');
+                                        }}
+                                        onKeyPress={handleKeyPress}
+                                        onFocus={() => setShowSuggestions(subject.length > 0)}
+                                        onBlur={() => setTimeout(() => setShowSuggestions(false), 300)}
+                                        placeholder="Enter subject name (e.g., Software Testing)"
+                                        className="w-full p-4 sm:p-6 pr-12 sm:pr-16 text-base sm:text-lg rounded-xl sm:rounded-2xl border-2 border-purple-200 focus:border-purple-500 focus:outline-none input-focus text-gray-800 placeholder-gray-500 touch-target"
+                                        disabled={loading}
+                                    />
+                                    <div className="absolute right-4 sm:right-6 top-1/2 transform -translate-y-1/2">
+                                        <i className="fas fa-search text-xl sm:text-2xl text-purple-400"></i>
+                                    </div>
+                                </div>
+                                
+                                {/* Suggestions Dropdown */}
+                                {showSuggestions && filteredSuggestions.length > 0 && (
+                                    <div className="suggestions-dropdown">
+                                        <div className="p-3 bg-purple-50 border-b text-sm text-purple-800 font-semibold">
+                                            📚 Found {filteredSuggestions.length} subjects from SRMIST Syllabus
+                                        </div>
+                                        {filteredSuggestions.map((subjectObj, index) => (
+                                            <div
+                                                key={index}
+                                                onMouseDown={(e) => {
+                                                    e.preventDefault();
+                                                    handleSuggestionClick(subjectObj);
+                                                }}
+                                                className="p-3 sm:p-4 hover:bg-purple-50 cursor-pointer border-b border-gray-100 last:border-b-0 transition-colors touch-target"
+                                            >
+                                                <div className="flex items-start">
+                                                    <i className="fas fa-book text-purple-500 mr-2 sm:mr-3 mt-1 text-sm sm:text-base"></i>
+                                                    <div className="flex-1 min-w-0">
+                                                        <div className="font-semibold text-gray-900 text-sm sm:text-base truncate">{subjectObj.name}</div>
+                                                        <div className="text-xs sm:text-sm text-gray-700 mt-1 flex flex-wrap items-center gap-2">
+                                                            <span className="bg-purple-100 text-purple-700 px-2 py-1 rounded text-xs font-mono">
+                                                                {subjectObj.code}
+                                                            </span>
+                                                            <span className="text-xs">Page {subjectObj.page}</span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+                                
+                                {/* Loading subjects indicator */}
+                                {loadingSubjects && (
+                                    <div className="suggestions-dropdown p-4">
+                                        <div className="flex items-center justify-center text-gray-500">
+                                            <div className="animate-spin h-4 w-4 border-2 border-purple-600 border-t-transparent rounded-full mr-2"></div>
+                                            Loading subjects from PDF...
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                            
+                            {/* Search Button */}
+                            <button
+                                onClick={handleSearch}
+                                disabled={loading || !subject.trim()}
+                                className={`w-full py-3 sm:py-4 px-6 sm:px-8 rounded-xl sm:rounded-2xl text-white font-semibold text-base sm:text-lg transition-all duration-300 touch-target ${
+                                    loading || !subject.trim()
+                                        ? 'bg-gray-400 cursor-not-allowed'
+                                        : 'btn-primary hover:shadow-2xl'
+                                }`}
+                            >
+                                {loading ? (
+                                    <div className="flex items-center justify-center">
+                                        <div className="spinner mr-3"></div>
+                                        Searching 587 pages...
+                                    </div>
+                                ) : (
+                                    <div className="flex items-center justify-center">
+                                        <i className="fas fa-search mr-3"></i>
+                                        Extract Syllabus Pages
+                                    </div>
+                                )}
+                            </button>
+                            
+                            {/* Loading Animation */}
+                            {loading && (
+                                <div className="mt-8 text-center animate-bounce-in">
+                                    <div className="inline-block p-6 rounded-2xl bg-purple-100">
+                                        <div className="flex items-center justify-center text-purple-600">
+                                            <i className="fas fa-file-pdf text-3xl mr-4 animate-pulse-slow"></i>
+                                            <div>
+                                                <p className="font-semibold text-lg">Processing PDF...</p>
+                                                <p className="text-sm">Searching through 587 pages</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+                            
+                            {/* Error Message */}
+                            {error && (
+                                <div className="mt-6 p-6 bg-red-50 border-l-4 border-red-400 rounded-xl animate-fade-in">
+                                    <div className="flex items-center">
+                                        <i className="fas fa-exclamation-triangle text-red-400 text-xl mr-4"></i>
+                                        <div>
+                                            <p className="text-red-800 font-medium">Search Failed</p>
+                                            <p className="text-red-600">{error}</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+                            
+                            {/* Success Result */}
+                            {result && (
+                                <div className="mt-6 p-6 bg-green-50 border-l-4 border-green-400 rounded-xl animate-bounce-in">
+                                    <div className="flex items-start justify-between">
+                                        <div className="flex items-center">
+                                            <i className="fas fa-check-circle text-green-400 text-2xl mr-4"></i>
+                                            <div>
+                                                <p className="text-green-800 font-semibold text-lg">
+                                                    Found {result.page_count} pages for "{result.subject}"
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <a
+                                        href={result.download_url}
+                                        download={result.filename}
+                                        className="mt-4 inline-flex items-center justify-center w-full sm:w-auto px-6 sm:px-8 py-3 sm:py-4 btn-success text-white rounded-xl font-semibold text-base sm:text-lg transition-all duration-300 hover:shadow-2xl touch-target"
+                                    >
+                                        <i className="fas fa-download mr-2 sm:mr-3"></i>
+                                        <span className="truncate">Download PDF ({result.page_count} pages)</span>
+                                    </a>
+                                </div>
+                            )}
+                        </div>
+                        
+                        {/* Features Section */}
+                        <div className="mt-16 sm:mt-32 grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6 animate-fade-in mx-2 sm:mx-0">
+                            <div className="glass-effect rounded-xl sm:rounded-2xl p-4 sm:p-6 text-center">
+                                <i className="fas fa-bolt text-2xl sm:text-3xl text-yellow-500 mb-3 sm:mb-4"></i>
+                                <h3 className="text-gray-800 font-semibold text-base sm:text-lg mb-2">Lightning Fast</h3>
+                                <p className="text-gray-600 text-sm sm:text-base">Instant search across all 587 pages</p>
+                            </div>
+                            <div className="glass-effect rounded-xl sm:rounded-2xl p-4 sm:p-6 text-center">
+                                <i className="fas fa-magic text-2xl sm:text-3xl text-pink-500 mb-3 sm:mb-4"></i>
+                                <h3 className="text-gray-800 font-semibold text-base sm:text-lg mb-2">Smart Matching</h3>
+                                <p className="text-gray-600 text-sm sm:text-base">Fuzzy search handles typos automatically</p>
+                            </div>
+                            <div className="glass-effect rounded-xl sm:rounded-2xl p-4 sm:p-6 text-center">
+                                <i className="fas fa-file-pdf text-2xl sm:text-3xl text-blue-500 mb-3 sm:mb-4"></i>
+                                <h3 className="text-gray-800 font-semibold text-base sm:text-lg mb-2">Perfect PDFs</h3>
+                                <p className="text-gray-600 text-sm sm:text-base">Original formatting preserved</p>
+                            </div>
+                        </div>
+                        
+                        {/* Footer */}
+                        <div className="mt-8 sm:mt-12 text-center text-white/60 px-4">
+                            <p className="text-xs sm:text-sm">© SRMIST Syllabus Extractor Portal<br className="sm:hidden" /><span className="hidden sm:inline"> • </span>Built with ❤️ for Faculty and Students</p>
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+        
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>

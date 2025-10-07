@@ -1,0 +1,9 @@
+@echo off
+echo 🚀 Starting SRMIST Syllabus Extractor Portal...
+echo.
+echo Installing dependencies...
+pip install -r requirements.txt
+echo.
+echo Starting the application...
+python app.py
+pause
