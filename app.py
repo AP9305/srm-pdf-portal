@@ -689,6 +689,9 @@ async def health_check():
     """Health check endpoint"""
     return {"status": "healthy", "service": "SRMIST Syllabus Extractor"}
 
+# Export app for Vercel
+handler = app
+
 if __name__ == "__main__":
     # Create static directory if it doesn't exist
     os.makedirs("static", exist_ok=True)
