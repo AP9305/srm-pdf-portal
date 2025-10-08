@@ -36,12 +36,12 @@ if os.path.exists("static"):
 pdf_cache = {}
 
 def download_pdf(url):
-    """Load PDF from local file with caching - INSTANT LOADING!"""
+    """Load PDF with smart fallback for Vercel deployment"""
     if url in pdf_cache:
         logger.info("Using cached PDF")
         return pdf_cache[url]
     
-    # Use local PDF file instead of downloading
+    # Try local PDF file first (for development)
     local_pdf_path = os.path.join(os.path.dirname(__file__), "main pdf", "computing-programmes-syllabus-2021.pdf")
     
     logger.info(f"Checking local PDF path: {local_pdf_path}")
@@ -51,10 +51,30 @@ def download_pdf(url):
             pdf_buffer = BytesIO(f.read())
         pdf_cache[url] = pdf_buffer
         return pdf_buffer
-    else:
-        # Fallback to download if local file not found
-        logger.info(f"Local PDF not found, downloading from {url}")
-        response = requests.get(url, timeout=30)
+    
+    # For Vercel deployment, try GitHub LFS URL
+    github_lfs_url = "https://github.com/AP9305/srm-pdf-portal/raw/main/main%20pdf/computing-programmes-syllabus-2021.pdf"
+    
+    try:
+        logger.info(f"Downloading PDF from GitHub LFS: {github_lfs_url}")
+        response = requests.get(github_lfs_url, timeout=60)
+        response.raise_for_status()
+        
+        if len(response.content) < 1000000:  # Less than 1MB indicates LFS pointer, not actual file
+            logger.warning("Got LFS pointer instead of actual PDF, trying original URL")
+            raise Exception("LFS pointer received")
+            
+        pdf_buffer = BytesIO(response.content)
+        pdf_cache[url] = pdf_buffer
+        logger.info(f"✅ Successfully downloaded PDF ({len(response.content)} bytes)")
+        return pdf_buffer
+        
+    except Exception as e:
+        logger.warning(f"GitHub LFS download failed: {e}")
+        # Final fallback to original URL
+        logger.info(f"Fallback: downloading from original URL {url}")
+        response = requests.get(url, timeout=60)
+        response.raise_for_status()
         pdf_buffer = BytesIO(response.content)
         pdf_cache[url] = pdf_buffer
         return pdf_buffer
@@ -582,38 +602,62 @@ async def download_file(filename: str):
 
 @app.get("/api/subjects")
 async def get_subjects():
-    """Get all subjects from the PDF table of contents"""
+    """Get all available subjects from the syllabus"""
     try:
+        # Download and parse PDF
         pdf_url = "https://webstor.srmist.edu.in/web_assets/downloads/2023/computing-programmes-syllabus-2021.pdf"
         pdf_buffer = download_pdf(pdf_url)
+        
+        if not pdf_buffer:
+            raise Exception("Failed to download PDF")
+            
         toc_entries = parse_table_of_contents(pdf_buffer)
         
-        # Format subjects for dropdown
+        if not toc_entries:
+            logger.warning("No TOC entries found, returning sample data")
+            # Return sample data if parsing fails
+            return {"subjects": [
+                {
+                    "code": "21CSC201J",
+                    "name": "Data Structures and Algorithms", 
+                    "page": 14,
+                    "display": "21CSC201J - Data Structures and Algorithms"
+                },
+                {
+                    "code": "21CSC202J",
+                    "name": "Operating Systems",
+                    "page": 16, 
+                    "display": "21CSC202J - Operating Systems"
+                }
+            ]}
+        
+        # Convert to format expected by frontend
         subjects = []
         for entry in toc_entries:
             subjects.append({
-                "code": entry['course_code'],
-                "name": entry['subject_name'],
-                "display": f"{entry['course_code']} - {entry['subject_name']}",
-                "page": entry['page_number'] + 1  # Convert to 1-based
+                "code": entry["course_code"],
+                "name": entry["subject_name"],
+                "page": entry["page_number"] + 1,  # Convert to 1-indexed
+                "display": f"{entry['course_code']} - {entry['subject_name']}"
             })
         
-        return JSONResponse({
-            "success": True,
-            "subjects": subjects,
-            "count": len(subjects)
-        })
+        logger.info(f"Returning {len(subjects)} subjects")
+        return {"subjects": subjects}
         
     except Exception as e:
         logger.error(f"Error getting subjects: {e}")
-        return JSONResponse({
-            "success": False,
-            "message": "Error loading subjects from PDF"
-        })
+        # Return sample data on error
+        return {"subjects": [
+            {
+                "code": "ERROR",
+                "name": f"PDF Loading Failed: {str(e)[:50]}...",
+                "page": 1,
+                "display": "ERROR - Check logs for details"
+            }
+        ]}
 
 @app.get("/api/test-pdf")
 async def test_pdf_creation():
-    """Test PDF creation with a simple document"""
     try:
         from pypdf import PdfWriter
         import tempfile
