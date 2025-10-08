@@ -1,17 +1,19 @@
-import requests
-from PyPDF2 import PdfReader, PdfWriter
-from io import BytesIO
-from fuzzywuzzy import fuzz
-import re
-import os
-from fastapi import FastAPI, Request
-from fastapi.responses import JSONResponse, FileResponse
+from fastapi import FastAPI, HTTPException, Request
+from fastapi.responses import HTMLResponse, FileResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
-import uvicorn
-import uuid
-import tempfile
+from pydantic import BaseModel
+from PyPDF2 import PdfReader, PdfWriter
+import requests
+import re
+import os
 import logging
+from io import BytesIO
+import tempfile
+from typing import List, Dict, Any
+import json
+from fuzzywuzzy import fuzz
+import unicodedata
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -28,8 +30,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Mount static files
-app.mount("/static", StaticFiles(directory="static"), name="static")
+# Note: Static files are served directly by Vercel, not mounted here
 
 # Cache for PDF to avoid redownloading
 pdf_cache = {}
@@ -644,15 +645,11 @@ async def health_check():
     """Health check endpoint"""
     return {"status": "healthy", "service": "SRMIST Syllabus Extractor"}
 
-# Export the FastAPI app for Vercel
-handler = app
+# Vercel serverless function handler
+def handler(request):
+    return app(request)
 
+# For local development
 if __name__ == "__main__":
-    # Create static directory if it doesn't exist
-    os.makedirs("static", exist_ok=True)
-    
-    print("Starting SRMIST Syllabus Extractor Portal...")
-    print("Ready to search the 587-page Computing Programmes Syllabus 2021")
-    
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000, reload=True)
+    uvicorn.run(app, host="0.0.0.0", port=8000)
